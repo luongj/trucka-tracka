@@ -25,6 +25,9 @@ FROM Mobile_Food_Facility_Permit
 => 190
 ```
 
+**COLUMN: `Status`** 
+
+The values of the `status` column. 
 ```
 SELECT Status, COUNT(*) AS count
 FROM Mobile_Food_Facility_Permit
@@ -38,21 +41,6 @@ ORDER BY Status ASC
 "ISSUED"	"2"
 "REQUESTED"	"193"
 "SUSPEND"	"5"
-```
-
-**COLUMN: `Status`** 
-
-The values of the `status` column. 
-```
-SELECT DISTINCT Status 
-FROM Mobile_Food_Facility_Permit
-
-=>
-"APPROVED"
-"REQUESTED"
-"EXPIRED"
-"ISSUED"
-"SUSPEND"
 ```
 
 **COLUMN: `FoodItems`** 
