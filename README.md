@@ -75,8 +75,6 @@ ORDER BY RANDOM() LIMIT 5
 - Render a result set sorted by most within specified distance.
 
 ## The Future Perfect
-
-*There are limits to evaluating things as point objects as the crow flies. Bounding boxes are probably more valuable in this scenario.*
-
-- Multiple truck locations are not counted for the truck being evaluated, but multiple truck locations *ARE* being calculated for *other* trucks.
+- Distances are as the crow flies, which is pragmatically less useful.
+- Multiple truck locations are not counted for the truck being evaluated, but multiple truck locations *ARE* being calculated for proximity calculations.
 - Not much in the way of data validation.

@@ -17,6 +17,8 @@ sqlite_conn.row_factory = sqlite3.Row
 file_csv_mobile_food = 'Mobile_Food_Facility_Permit.csv'
 db_table_mobile_food = 'Mobile_Food_Facility_Permit' 
 
+int_sf_per_mi = 27878400
+
 ###
 # functions
 #
@@ -41,6 +43,23 @@ def get_location_search_term(sqlcon = None, search = None):
 def get_distance_feet(location_1 = None, location_2 = None):
 	return geopy.distance.geodesic(location_1, location_2).ft
 
+# get sf of the bounding box
+def get_box_sf(lati_min = 0, lati_max = 0, long_min = 0, long_max = 0):
+	# hold longitude, determine latitude difference
+	point_lati_1 = geopy.Point(lati_min, long_min)
+	point_lati_2 = geopy.Point(lati_max, long_min)
+	lati_diff_ft = get_distance_feet(location_1 = point_lati_1, location_2 = point_lati_2)
+
+	# hold latitude, determine longitude difference
+	point_long_1 = geopy.Point(lati_min, long_min)
+	point_long_2 = geopy.Point(lati_min, long_max)
+	long_diff_ft = get_distance_feet(location_1 = point_long_1, location_2 = point_long_2)
+
+	return lati_diff_ft * long_diff_ft
+
+def sf_to_sq_mi(sf = 0):
+	return sf / int_sf_per_mi
+
 ###
 # ====== MAIN ======
 #
@@ -57,6 +76,7 @@ input_search = 'taco'
 input_distance = 5000
 input_search = input('What are you in the mood for? ')
 input_distance = input('How far are you willing to go (in feet)? ')
+input_search = input_search.strip()
 input_distance = int(input_distance)
 
 ###
@@ -70,6 +90,7 @@ query_location_search = get_location_search_term(sqlcon = sqlite_conn, search = 
 query_location_search_list_column = list(map(lambda x: x[0], query_location_search.description))
 df = pd.DataFrame(query_location_search, columns = query_location_search_list_column)
 df['int_loc_within'] = 0
+df['box_sf'] = 0
 
 if len(df) == 0:
 	print("No result for: " + input_search)
@@ -81,6 +102,12 @@ if len(df) == 0:
 for main_index, main_row in df.iterrows():
 
 	int_location_counter = 0
+
+	# bounding box
+	lati_min = main_row['Latitude']
+	lati_max = main_row['Latitude']
+	long_min = main_row['Longitude']
+	long_max = main_row['Longitude']
 
 	# sub-loop to iterate over compared
 	for comp_index, comp_row in df.iterrows():
@@ -96,8 +123,19 @@ for main_index, main_row in df.iterrows():
 			if dist < input_distance:
 				int_location_counter = int_location_counter + 1
 
-	# write counter back to df
+				# update bounding box
+				lati_min = min(lati_min, comp_row['Latitude'])
+				lati_max = max(lati_max, comp_row['Latitude'])
+				long_min = min(long_min, comp_row['Longitude'])
+				long_max = max(long_max, comp_row['Longitude'])
+
+	# end of iteration
+	# 	write counter back to df
 	df.at[main_index, 'int_loc_within'] = int_location_counter
+
+	# assume that two locations do not have exact same latitude or longitude, creating a box dimension of 0
+	if int_location_counter > 1:
+		df.at[main_index, 'box_sf'] = get_box_sf(lati_min = lati_min, lati_max = lati_max, long_min = long_min, long_max = long_max)
 
 ###
 # sort and output
@@ -110,7 +148,10 @@ print("Search: " + input_search)
 print("Distance: " + str(input_distance) + " (feet)")
 print("---")
 for index, row in df_sorted.iterrows():
-	print(row['Applicant'] + " / " + row['Address'] + ' / Nearby: ' + str(row['int_loc_within']))
+	str_bounding_box = ''
+	if row['int_loc_within'] > 1:
+		str_bounding_box = str_bounding_box + ' in ' + str( round(sf_to_sq_mi(sf = row['box_sf']), 2) ) + ' sq mi'
+	print(row['Applicant'] + " / " + row['Address'] + ' / Nearby: ' + str(row['int_loc_within']) + str_bounding_box)
 
 ###
 # close sqlite
