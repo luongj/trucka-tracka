@@ -25,6 +25,21 @@ FROM Mobile_Food_Facility_Permit
 => 190
 ```
 
+```
+SELECT Status, COUNT(*) AS count
+FROM Mobile_Food_Facility_Permit
+GROUP BY Status
+ORDER BY Status ASC
+
+=> 
+"Status"	"count"
+"APPROVED"	"60"
+"EXPIRED"	"369"
+"ISSUED"	"2"
+"REQUESTED"	"193"
+"SUSPEND"	"5"
+```
+
 **COLUMN: `Status`** 
 
 The values of the `status` column. 
@@ -75,5 +90,5 @@ ORDER BY RANDOM() LIMIT 5
 
 *There are limits to evaluating things as point objects as the crow flies. Bounding boxes are probably more valuable in this scenario.*
 
-- Multiple truck locations are not counted for the truck being evaluated, but multiple truck locations *ARE* being calculated for *other* trucks
-- Not much in the way of data validation
+- Multiple truck locations are not counted for the truck being evaluated, but multiple truck locations *ARE* being calculated for *other* trucks.
+- Not much in the way of data validation.
