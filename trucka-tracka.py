@@ -16,8 +16,8 @@ sqlite_conn.row_factory = sqlite3.Row
 #
 file_csv_mobile_food = 'Mobile_Food_Facility_Permit.csv'
 db_table_mobile_food = 'Mobile_Food_Facility_Permit' 
-
 int_sf_per_mi = 27878400
+bool_CLI_prompt = True
 
 ###
 # functions
@@ -28,16 +28,19 @@ def upload_csv_to_sqlite(sqlcon = None, file_csv = None, db_table = None):
 
 	mobile_food_data.to_sql(name = db_table, con=sqlcon, index=False, if_exists='replace')
 
+	return None
+
 def get_location_search_term(sqlcon = None, search = None):
-	# https://stackoverflow.com/questions/45343175/python-3-sqlite-parameterized-sql-query
-	# parameterizing with `LIKE` is messy; fix later
-	return sqlcon.execute(
-		f"""
+	# parameterizing with `LIKE` is messy
+	# 	https://stackoverflow.com/questions/3105249/python-sqlite-parameter-substitution-with-wildcards-in-like
+	# 	https://stackoverflow.com/questions/16856647/sqlite3-programmingerror-incorrect-number-of-bindings-supplied-the-current-sta
+	# must send a tuple that contains the search term
+	return sqlcon.execute(f"""
 		SELECT 	locationid, Applicant, Address, permit, Location, Latitude, Longitude
 		FROM 	Mobile_Food_Facility_Permit
 		WHERE 	1=1
  		AND 	Status IN ('APPROVED', 'ISSUED')
-		AND 	lower(FoodItems) LIKE '%""" + search.lower() + "%'")
+		AND 	lower(FoodItems) LIKE ?""", ("%" + search + "%",) )
 
 # https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude
 def get_distance_feet(location_1 = None, location_2 = None):
@@ -74,8 +77,11 @@ if len(query_result) == 0:
 #
 input_search = 'taco'
 input_distance = 5000
-input_search = input('What are you in the mood for? ')
-input_distance = input('How far are you willing to go (in feet)? ')
+
+if bool_CLI_prompt:
+	input_search = input('What are you in the mood for? ')
+	input_distance = input('How far are you willing to go (in feet)? ')
+
 input_search = input_search.strip()
 input_distance = int(input_distance)
 
