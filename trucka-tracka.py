@@ -40,7 +40,7 @@ def get_location_search_term(sqlcon = None, search = None):
 		FROM 	Mobile_Food_Facility_Permit
 		WHERE 	1=1
  		AND 	Status IN ('APPROVED', 'ISSUED')
-		AND 	lower(FoodItems) LIKE ?""", ("%" + search + "%",) )
+		AND 	lower(FoodItems) LIKE ?""", ("%" + search.lower() + "%",) )
 
 # https://stackoverflow.com/questions/19412462/getting-distance-between-two-points-based-on-latitude-longitude
 def get_distance_feet(location_1 = None, location_2 = None):
